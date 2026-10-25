@@ -1,0 +1,19 @@
+name: Daily Log
+on:
+  schedule:
+    - cron: '0 17 * * *'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  log:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          git config user.name "aungzayyanaing"
+          git config user.email "aungzayyanaing2@gmail.com"
+          echo "- $(TZ='Asia/Rangoon' date '+%Y-%m-%d') Daily log" >> daily-log.md
+          git add daily-log.md
+          git commit -m "Daily log $(TZ='Asia/Rangoon' date '+%Y-%m-%d')" || echo "nothing to commit"
+          git push
