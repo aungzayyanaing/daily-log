@@ -13,9 +13,14 @@ jobs:
       - run: |
           git config user.name "aungzayyanaing"
           git config user.email "aungzayyanaing2@gmail.com"
+          TODAY=$(TZ='Asia/Rangoon' date '+%Y-%m-%d')
+          if grep -q "^- $TODAY Daily log entry" daily-log.md; then
+            echo "Entries for $TODAY already exist, skipping."
+            exit 0
+          fi
           for i in $(seq 1 10); do
-            echo "- $(TZ='Asia/Rangoon' date '+%Y-%m-%d') Daily log entry $i" >> daily-log.md
+            echo "- $TODAY Daily log entry $i" >> daily-log.md
             git add daily-log.md
-            git commit -m "Daily log $(TZ='Asia/Rangoon' date '+%Y-%m-%d') entry $i"
+            git commit -m "Daily log $TODAY entry $i"
           done
           git push
