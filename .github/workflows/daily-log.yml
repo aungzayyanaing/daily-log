@@ -13,14 +13,49 @@ jobs:
       - run: |
           git config user.name "aungzayyanaing"
           git config user.email "aungzayyanaing2@gmail.com"
-          TODAY=$(TZ='Asia/Rangoon' date '+%Y-%m-%d')
-          if grep -q "^- $TODAY Daily log entry" daily-log.md; then
-            echo "Entries for $TODAY already exist, skipping."
-            exit 0
-          fi
-          for i in $(seq 1 10); do
-            echo "- $TODAY Daily log entry $i" >> daily-log.md
+          # Asia/Rangoon is a retired tzdata alias: since 2026-11-08 it no
+          # longer resolves on the runner and `date` silently falls back to
+          # UTC, so entries were dated a day early. Asia/Yangon is the
+          # canonical name for the same zone.
+          TODAY=$(TZ='Asia/Yangon' date '+%Y-%m-%d')
+          # Append one entry line and commit it (10 commits/day = darker square).
+          add_entry() {
+            echo "- $1 Daily log entry $2" >> daily-log.md
             git add daily-log.md
-            git commit -m "Daily log $TODAY entry $i"
-          done
+            git commit -m "Daily log $1 entry $2"
+          }
+          # Insert one entry line for day $1 after line $2, then commit it.
+          insert_entry() {
+            { head -n "$2" daily-log.md; echo "- $1 Daily log entry $3"; tail -n +"$(( $2 + 1 ))" daily-log.md; } > daily-log.md.tmp
+            mv daily-log.md.tmp daily-log.md
+            git add daily-log.md
+            git commit -m "Daily log $1 entry $3"
+          }
+          if ! grep -qE '^- [0-9]{4}-[0-9]{2}-[0-9]{2} Daily log entry' daily-log.md; then
+            # Fresh log with no entries yet: just write today.
+            for i in $(seq 1 10); do add_entry "$TODAY" "$i"; done
+          else
+            # Sweep every day from the first entry through today. Scheduled
+            # runs are routinely delayed hours past midnight, and a run that
+            # landed after midnight used to drop its day forever (2026-11-09
+            # and 2026-11-16 have no entries for this reason). Missed days
+            # are inserted in chronological order so the log stays sorted.
+            FIRST=$(grep -oE '^- [0-9]{4}-[0-9]{2}-[0-9]{2} Daily log entry' daily-log.md | head -1 | awk '{print $2}')
+            D=$FIRST
+            while [ "$D" != "$TODAY" ]; do
+              D=$(date -u -d "$D + 1 day" '+%Y-%m-%d')
+              if ! grep -q "^- $D Daily log entry" daily-log.md; then
+                if [ "$D" = "$TODAY" ]; then
+                  for i in $(seq 1 10); do add_entry "$D" "$i"; done
+                else
+                  PREV=$(date -u -d "$D - 1 day" '+%Y-%m-%d')
+                  pos=$(grep -n "^- $PREV Daily log entry" daily-log.md | tail -1 | cut -d: -f1)
+                  for i in $(seq 1 10); do
+                    insert_entry "$D" "$pos" "$i"
+                    pos=$((pos + 1))
+                  done
+                fi
+              fi
+            done
+          fi
           git push
