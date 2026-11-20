@@ -10,7 +10,7 @@ A plain Markdown daily log, kept in `daily-log.md`. A GitHub Actions workflow ad
 
 ## How it works
 
-The `Daily Log` workflow runs every day at 17:00 UTC. It takes the date in the `Asia/Rangoon` timezone, checks whether that date already has an entry in `daily-log.md`, and if not, appends entries 1 through 10 for that date — each as a separate commit, with messages such as `Daily log 2026-11-12 entry 1` — then pushes to `main`. If the date already has an entry, the run does nothing.
+The `Daily Log` workflow runs every day at 17:00 UTC. It takes the date in the `Asia/Yangon` timezone and writes entries 1 through 10 for every day from the first entry through today that does not have them yet — each as a separate commit, with messages such as `Daily log 2026-11-12 entry 1` — then pushes to `main`. Days the scheduled run missed (for example when it is delayed past midnight) are backfilled on the next run, in chronological order. If every day through today already has entries, the run does nothing.
 
 ## How to use it
 
