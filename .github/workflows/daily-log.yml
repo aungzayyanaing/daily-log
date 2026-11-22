@@ -38,8 +38,9 @@ jobs:
             # Sweep every day from the first entry through today. Scheduled
             # runs are routinely delayed hours past midnight, and a run that
             # landed after midnight used to drop its day forever (2026-11-09
-            # and 2026-11-16 have no entries for this reason). Missed days
-            # are inserted in chronological order so the log stays sorted.
+            # and 2026-11-16 had no entries for this reason; both have since
+            # been backfilled). Missed days are inserted in chronological
+            # order so the log stays sorted.
             FIRST=$(grep -oE '^- [0-9]{4}-[0-9]{2}-[0-9]{2} Daily log entry' daily-log.md | head -1 | awk '{print $2}')
             D=$FIRST
             while [ "$D" != "$TODAY" ]; do
